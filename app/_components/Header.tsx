@@ -1,29 +1,72 @@
 "use client";
 
-import { useNavigation } from "../_hooks/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useIntersect } from "../_hooks/intersect";
+import { ChevronDoubleUpIcon } from "@heroicons/react/24/outline";
+import Drawer from "./Drawer";
 
-export default function Header() {
-  const { header, sidebar, top } = useNavigation();
+export const Header = () => {
+  const topRef = useRef(null);
+
+  const [topIntersecting] = useIntersect(topRef, 300);
+  const [showHeader, setShowHeader] = useState(true);
+
+  // Track scroll direction
+  useEffect(() => {
+    let last: number = 0,
+      prev: number = 0,
+      toTop: boolean = false;
+
+    const PIVOT = 100;
+
+    const handler = () => {
+      const { scrollY } = window;
+      // Check direction.
+      if (
+        (scrollY > prev  && toTop && scrollY > last+PIVOT) ||
+        (scrollY < prev && !toTop && scrollY < last - PIVOT )
+      ) {
+        last = scrollY;
+        toTop = !toTop;
+        setShowHeader(toTop);
+      }
+      // Update prev value.
+      prev = scrollY;
+    };
+
+    // Attach event.
+    window.addEventListener("scroll", handler);
+    // Cleanup.
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
+
   return (
     <>
-      <div id="top" />
-      <header className="absolute top-0 h-12 w-full bg-white/30 flex items-center justify-between p-2 shadow">
-        <span>Logo</span>
-
-        <nav className="sm:block hidden">
+      <div ref={topRef} id="top" />
+      <header className={`flex justify-between items-center px-4 bg-white dark:bg-black w-full h-12 sm:h-14 fixed ${showHeader ? 'top-0':'-top-20'}`}>
+        <section>Logo {showHeader ? 'show': 'not show'}</section>
+        {/* Navigation section */}
+        <nav className="hidden sm:block">
           <ul className="flex gap-4">
-            <li>Link 1</li>
-            <li>Link 2</li>
-            <li>Link 3</li>
+            <li>Link One</li>
+            <li>Link Two</li>
           </ul>
         </nav>
-
-        <figure className="sm:block hidden">Avatar</figure>
-
-        <button className="sm:hidden">Menu</button>
+        {/* Auth section */}
+        <section className="hidden sm:block">login</section>
+        {/* Drawer section */}
+        <section className="sm:hidden">
+          <Drawer />
+        </section>
       </header>
-
-      <aside className={`absolute -left-full top-0 h-screen w-72 bg-white`}>bla</aside>
+      <a
+        href="#top"
+        className={`fixed bottom-5 p-1 right-5 bg-white opacity-50 dark:bg-black rounded-full animate-[spin_1s] hover:animate-bounce ${
+          topIntersecting ? "hidden" : ""
+        }`}
+      >
+        <ChevronDoubleUpIcon className="w-8 h-8" />
+      </a>
     </>
   );
-}
+};

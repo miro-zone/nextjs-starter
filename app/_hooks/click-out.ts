@@ -11,20 +11,20 @@ import {
  */
 export const useClickOut: (
   elRef: RefObject<any>,
-  onClickOut: () => void
+  onClickOut?: () => void
 ) => [boolean, Dispatch<SetStateAction<boolean>>] = (elRef, onClickOut) => {
   // Initiate state with false (closed).
   const [open, setOpen] = useState(false);
 
   // On each click away change state to false (close).
-  const onClick = useCallback(
+  const clickOutHandler = useCallback(
     (me: MouseEvent) => {
       // In case element not rendered yet.
       if (!elRef.current) return;
       // Check if clicked inside target element.
       if (elRef.current.contains(me.target as Element)) return;
       // Call the lister.
-      onClickOut();
+      onClickOut?.();
       // Toggle state to false (close) otherwise.
       setOpen(false);
     },
@@ -34,10 +34,10 @@ export const useClickOut: (
   // Listen to each click on dom.
   useEffect(() => {
     // Attach event when component mount.
-    document.addEventListener("click", onClickOut);
+    document.addEventListener("click", clickOutHandler);
     // Clear event once component demount.
-    return () => document.removeEventListener("click", onClickOut);
-  }, [onClick]);
+    return () => document.removeEventListener("click", clickOutHandler);
+  }, [clickOutHandler]);
   // Return state and dispatcher to caller.
   return [open, setOpen];
 };
